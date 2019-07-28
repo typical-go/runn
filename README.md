@@ -1,5 +1,9 @@
 # Runn
 
+[![GoDoc](https://godoc.org/github.com/typical-go/runn?status.svg)](https://godoc.org/github.com/typical-go/runn)
+[![Coverage](http://gocover.io/_badge/github.com/typical-go/runn)](https://gocover.io/github.com/typical-go/runn)
+[![Go Report Card](https://goreportcard.com/badge/github.com/typical-go/runn)](https://goreportcard.com/report/github.com/typical-go/runn)
+
 Naive library to handling multiple code execution and errors 
 
 ## Usage
