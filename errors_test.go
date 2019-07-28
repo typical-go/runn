@@ -11,6 +11,7 @@ import (
 func TestErrors(t *testing.T) {
 	var errors runn.Errors
 	errors.Add(fmt.Errorf("error1"))
+	errors.Add(nil)
 	errors.Add(fmt.Errorf("error2"))
 	errors.Add(fmt.Errorf("error3"))
 

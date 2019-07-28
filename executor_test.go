@@ -12,7 +12,7 @@ import (
 
 type RunnerImplementationWithError struct{}
 
-func (i RunnerImplementationWithError) Run() error { return errors.New("some-error") }
+func (i RunnerImplementationWithError) Run() error { return errors.New("some-runner-error") }
 
 type RunnerImplementationNoError struct{}
 
@@ -27,12 +27,12 @@ func TestExecutor_All(t *testing.T) {
 		{
 			false,
 			[]interface{}{
-				RunnerImplementationWithError{},
 				errors.New("error1"),
+				RunnerImplementationWithError{},
 				errors.New("error2"),
 				exec.Command("wrong-command", "bad-argument"),
 			},
-			errors.New("some-error; error1; error2; exec: \"wrong-command\": executable file not found in $PATH"),
+			errors.New("error1; some-runner-error; error2; exec: \"wrong-command\": executable file not found in $PATH"),
 		},
 		{
 			true,
@@ -43,15 +43,27 @@ func TestExecutor_All(t *testing.T) {
 			errors.New("error1"),
 		},
 		{
+			true,
+			[]interface{}{
+				RunnerImplementationWithError{},
+				errors.New("unreachable-error"),
+			},
+			errors.New("some-runner-error"),
+		},
+		{
+			true,
+			[]interface{}{
+				exec.Command("wrong-command", "bad-argument"),
+				errors.New("unreachable-error"),
+			},
+			errors.New("exec: \"wrong-command\": executable file not found in $PATH"),
+		},
+		{
 			false,
 			[]interface{}{},
 			nil,
 		},
-		{
-			true,
-			[]interface{}{},
-			nil,
-		},
+
 		{
 			false,
 			[]interface{}{
