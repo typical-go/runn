@@ -9,42 +9,66 @@ import (
 	"github.com/typical-go/runn"
 )
 
+type RunnerImplementationWithError struct{}
+
+func (i RunnerImplementationWithError) Run() error { return errors.New("some-error") }
+
+type RunnerImplementationNoError struct{}
+
+func (i RunnerImplementationNoError) Run() error { return nil }
+
 func TestExecutor_All(t *testing.T) {
-	executor := runn.Executor{
-		StopWhenError: false,
+	testcases := []struct {
+		stopWhenError bool
+		stmts         []interface{}
+		err           error
+	}{
+		{
+			false,
+			[]interface{}{
+				RunnerImplementationWithError{},
+				errors.New("error1"),
+				errors.New("error2"),
+			},
+			errors.New("some-error; error1; error2"),
+		},
+		{
+			true,
+			[]interface{}{
+				errors.New("error1"),
+				errors.New("unreachable-error"),
+			},
+			errors.New("error1"),
+		},
+		{
+			false,
+			[]interface{}{},
+			nil,
+		},
+		{
+			true,
+			[]interface{}{},
+			nil,
+		},
+		{
+			false,
+			[]interface{}{
+				RunnerImplementationNoError{},
+				RunnerImplementationWithError{},
+			},
+			errors.New("some-error"),
+		},
 	}
 
-	t.Run("GIVEN multiple error", func(t *testing.T) {
-		err := executor.Execute(
-			errors.New("error1"),
-			errors.New("error2"),
-		)
-		require.EqualError(t, err, "error1; error2;")
-	})
+	for _, tt := range testcases {
+		err := runn.Executor{
+			StopWhenError: tt.stopWhenError,
+		}.Execute(tt.stmts...)
 
-	t.Run("GIVEN no error/statement", func(t *testing.T) {
-		err := executor.Execute()
-		require.NoError(t, err)
-	})
-
-}
-
-func TestExecutor_StopWhenError(t *testing.T) {
-	executor := runn.Executor{
-		StopWhenError: true,
+		if tt.err == nil {
+			require.NoError(t, err)
+		} else {
+			require.EqualError(t, err, tt.err.Error())
+		}
 	}
-
-	t.Run("GIVEN multiple error", func(t *testing.T) {
-		err := executor.Execute(
-			errors.New("error1"),
-			errors.New("unreachable-error"),
-		)
-		require.EqualError(t, err, "error1")
-	})
-
-	t.Run("GIVEN no error/statement", func(t *testing.T) {
-		err := executor.Execute()
-		require.NoError(t, err)
-	})
-
 }

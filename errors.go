@@ -19,10 +19,9 @@ func (e Errors) Error() string {
 	var builder strings.Builder
 	for i, err := range e {
 		if i > 0 {
-			builder.WriteString(" ")
+			builder.WriteString("; ")
 		}
 		builder.WriteString(err.Error())
-		builder.WriteString(";")
 	}
 
 	return builder.String()

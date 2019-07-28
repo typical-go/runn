@@ -9,7 +9,6 @@ type Executor struct {
 func (e Executor) Execute(stmts ...interface{}) (err error) {
 	var errs Errors
 	for _, stmt := range stmts {
-
 		switch stmt.(type) {
 		case error:
 			stmtErr := stmt.(error)
@@ -17,6 +16,13 @@ func (e Executor) Execute(stmts ...interface{}) (err error) {
 				return stmtErr
 			}
 			errs.Add(stmtErr)
+		case Runner:
+			runner := stmt.(Runner)
+			runErr := runner.Run()
+			if e.StopWhenError {
+				return runErr
+			}
+			errs.Add(runErr)
 		}
 	}
 	if len(errs) > 0 {
