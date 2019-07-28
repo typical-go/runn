@@ -2,6 +2,7 @@ package runn_test
 
 import (
 	"errors"
+	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,8 +30,9 @@ func TestExecutor_All(t *testing.T) {
 				RunnerImplementationWithError{},
 				errors.New("error1"),
 				errors.New("error2"),
+				exec.Command("wrong-command", "bad-argument"),
 			},
-			errors.New("some-error; error1; error2"),
+			errors.New("some-error; error1; error2; exec: \"wrong-command\": executable file not found in $PATH"),
 		},
 		{
 			true,
@@ -54,9 +56,10 @@ func TestExecutor_All(t *testing.T) {
 			false,
 			[]interface{}{
 				RunnerImplementationNoError{},
-				RunnerImplementationWithError{},
+				nil,
+				exec.Command("echo", "hello", "world"),
 			},
-			errors.New("some-error"),
+			nil,
 		},
 	}
 

@@ -1,5 +1,11 @@
 package runn
 
+import (
+	"bytes"
+	"fmt"
+	"os/exec"
+)
+
 // Executor do the code statement execution
 type Executor struct {
 	StopWhenError bool
@@ -19,10 +25,26 @@ func (e Executor) Execute(stmts ...interface{}) (err error) {
 		case Runner:
 			runner := stmt.(Runner)
 			runErr := runner.Run()
-			if e.StopWhenError {
-				return runErr
+			if runErr != nil {
+				if e.StopWhenError {
+					return runErr
+				}
+				errs.Add(runErr)
 			}
-			errs.Add(runErr)
+		case *exec.Cmd:
+			execCmd := stmt.(*exec.Cmd)
+			buf := bytes.Buffer{}
+			execCmd.Stdout = &buf
+			execCmd.Stderr = &buf
+
+			runErr := execCmd.Run()
+			if err != nil {
+				runErr = fmt.Errorf("%s: %s", err.Error(), buf.String())
+				if e.StopWhenError {
+					return runErr
+				}
+				errs.Add(runErr)
+			}
 		}
 	}
 	if len(errs) > 0 {
